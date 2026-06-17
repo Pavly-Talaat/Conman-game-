@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>المحتال — كشف الأدوار</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa+Ink:wght@400;700&family=Cairo:wght@300;400;600;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0D0B0E;
+  --bone:#E8E2D4;
+  --bone-dim:#cdc6b4;
+  --blood:#8B1A1A;
+  --brass:#C9A227;
+  --line:rgba(232,226,212,0.18);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+
+body{
+  background:var(--ink);
+  color:var(--bone);
+  font-family:'Cairo', sans-serif;
+  overflow-x:hidden;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+
+body::before{
+  content:"";
+  position:fixed; inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+  pointer-events:none;
+  z-index:999;
+  mix-blend-mode:overlay;
+}
+
+.mono{font-family:'IBM Plex Mono', monospace;}
+.display{font-family:'Aref Ruqaa Ink', serif;}
+
+/* Header */
+.case-bar{
+  position:sticky; top:0; z-index:50;
+  display:flex; justify-content:space-between; align-items:center;
+  padding:14px 28px;
+  border-bottom:1px solid var(--line);
+  background:rgba(13,11,14,0.92);
+  backdrop-filter:blur(4px);
+}
+.case-bar .tag{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:11px;
+  letter-spacing:2px;
+  color:var(--brass);
+  text-transform:uppercase;
+}
+.case-bar .back-link{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:12px;
+  color:var(--bone-dim);
+  text-decoration:none;
+  display:flex; align-items:center; gap:8px;
+  transition:color 0.3s;
+  cursor:pointer;
+}
+.case-bar .back-link:hover{color:var(--bone);}
+
+/* Main Layout */
+main{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:60px 6vw;
+}
+
+.card-display-area{
+  width:100%;
+  max-width:600px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+.player-label{
+  font-family:'Aref Ruqaa Ink', serif;
+  font-size:48px;
+  text-align:center;
+  margin-bottom:32px;
+  color:var(--bone);
+  padding:20px;
+  border-bottom:2px solid var(--line);
+  width:100%;
+}
+
+.reveal-card{
+  background:var(--bone);
+  color:var(--ink);
+  padding:60px 40px;
+  text-align:center;
+  position:relative;
+  cursor:pointer;
+  user-select:none;
+  transition:transform 0.3s;
+  min-height:320px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  width:100%;
+  margin-bottom:32px;
+}
+.reveal-card:hover{transform:scale(1.02);}
+
+.reveal-card.hidden .role-content{
+  filter:blur(12px);
+  opacity:0.3;
+  pointer-events:none;
+}
+
+.reveal-card .cover{
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  background:var(--bone);
+  z-index:2;
+}
+
+.reveal-card.revealed .cover{display:none;}
+
+.reveal-card .cover-text{
+  font-family:'Aref Ruqaa Ink', serif;
+  font-size:72px;
+  color:var(--ink);
+  animation:pulse-large 1s infinite;
+}
+
+@keyframes pulse-large{
+  0%, 100%{opacity:1; transform:scale(1);}
+  50%{opacity:0.7; transform:scale(0.95);}
+}
+
+.reveal-card .cover-hint{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:14px;
+  color:#6b6456;
+  margin-top:20px;
+  letter-spacing:2px;
+}
+
+.reveal-card .player-name{
+  font-family:'Aref Ruqaa Ink', serif;
+  font-size:28px;
+  margin-bottom:16px;
+  color:var(--ink);
+}
+
+.reveal-card .role-revealed{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:16px;
+  letter-spacing:4px;
+  padding:12px 28px;
+  border:3px solid;
+  display:inline-block;
+  margin-top:16px;
+  background:transparent;
+}
+
+.reveal-card .role-desc-reveal{
+  font-size:14px;
+  color:#6b6456;
+  margin-top:20px;
+  line-height:1.8;
+}
+
+.controls{
+  display:flex;
+  gap:16px;
+  justify-content:center;
+  flex-wrap:wrap;
+  width:100%;
+  max-width:500px;
+}
+
+.btn{
+  font-family:'Cairo', sans-serif;
+  font-weight:800;
+  font-size:16px;
+  padding:16px 40px;
+  border:2px solid var(--bone);
+  background:transparent;
+  color:var(--bone);
+  cursor:pointer;
+  position:relative;
+  overflow:hidden;
+  transition:color 0.35s ease;
+  z-index:1;
+}
+
+.btn::before{
+  content:"";
+  position:absolute; inset:0;
+  background:var(--bone);
+  transform:scaleX(0);
+  transform-origin:right;
+  transition:transform 0.35s ease;
+  z-index:-1;
+}
+
+.btn:hover{color:var(--ink);}
+.btn:hover::before{transform:scaleX(1);}
+
+.btn.primary{
+  background:var(--blood);
+  border-color:var(--blood);
+  color:var(--bone);
+}
+
+.btn.primary::before{background:var(--blood);}
+.btn.primary:hover{color:var(--bone);}
+
+.btn:disabled{
+  opacity:0.4;
+  cursor:not-allowed;
+}
+
+.counter-text{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:13px;
+  color:var(--bone-dim);
+  text-align:center;
+  margin-top:24px;
+  letter-spacing:2px;
+}
+
+.completion-screen{
+  text-align:center;
+  padding:60px 32px;
+  border:2px solid var(--brass);
+  width:100%;
+}
+
+.completion-screen h2{
+  font-family:'Aref Ruqaa Ink', serif;
+  font-size:48px;
+  margin-bottom:16px;
+  color:var(--bone);
+}
+
+.completion-screen p{
+  color:var(--bone-dim);
+  font-size:16px;
+  line-height:1.8;
+  max-width:400px;
+  margin:0 auto 24px;
+}
+
+/* Footer */
+footer{
+  padding:28px 6vw;
+  display:flex; justify-content:space-between;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:11px;
+  color:var(--bone-dim);
+  letter-spacing:1px;
+  flex-wrap:wrap;
+  gap:10px;
+  border-top:1px solid var(--line);
+}
+
+@media(max-width:600px){
+  main{padding:40px 6vw;}
+  .player-label{font-size:36px;}
+  .reveal-card{
+    padding:40px 24px;
+    min-height:280px;
+  }
+  .reveal-card .cover-text{font-size:54px;}
+  .reveal-card .player-name{font-size:24px;}
+}
+</style>
+</head>
+<body>
+
+<div class="case-bar">
+  <a onclick="goBack()" class="back-link">← العودة للإعداد</a>
+  <span class="tag">توزيع الأدوار ◆ المحتال</span>
+</div>
+
+<main>
+  <div class="card-display-area" id="cardArea"></div>
+</main>
+
+<footer>
+  <span>لعبة المحتال © ٢٠٢٦</span>
+  <span>🔒 لا تكشف دورك لأحد حتى تنتهي الجلسة</span>
+</footer>
+
+<script>
+const arabicNums = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩','١٠','١١','١٢'];
+
+function toArabicNum(n) {
+  return arabicNums[n] || n;
+}
+
+let currentPlayerIndex = 0;
+let allPlayers = [];
+
+function initCards() {
+  // Get players data from sessionStorage
+  const playersData = sessionStorage.getItem('playersData');
+  
+  if(!playersData) {
+    document.getElementById('cardArea').innerHTML = `
+      <div class="completion-screen">
+        <h2>خطأ ⚠️</h2>
+        <p>لم يتم العثور على بيانات اللاعبين</p>
+        <button class="btn primary" onclick="goBack()">العودة للإعداد</button>
+      </div>
+    `;
+    return;
+  }
+  
+  allPlayers = JSON.parse(playersData);
+  currentPlayerIndex = 0;
+  
+  if(allPlayers.length === 0) {
+    document.getElementById('cardArea').innerHTML = `
+      <div class="completion-screen">
+        <h2>لا يوجد لاعبين!</h2>
+        <p>يرجى إضافة لاعبين أولاً</p>
+        <button class="btn primary" onclick="goBack()">العودة للإعداد</button>
+      </div>
+    `;
+    return;
+  }
+  
+  showCard(0);
+}
+
+function showCard(idx) {
+  currentPlayerIndex = idx;
+  const player = allPlayers[idx];
+  const cardArea = document.getElementById('cardArea');
+  
+  const roleInfo = {
+    impostor: { label: 'المحتال', color: '#8B1A1A', desc: 'أنت تعرف الحقيقة كاملة. مهمتك أن تخفيها بإقناع تام. لا تكشف نفسك.' },
+    innocent: { label: 'البريء', color: '#C9A227', desc: 'أنت تمتلك جزءاً من الحقيقة. حاول تجميع الصورة الكاملة من كلام الآخرين.' },
+    watcher: { label: 'المراقب', color: '#6b6456', desc: 'أنت لا تعرف شيئاً. لكن تصويتك يُحسب مثل الجميع. كن حذراً.' }
+  };
+  
+  const info = roleInfo[player.role];
+  
+  cardArea.innerHTML = `
+    <div class="player-label">${player.name}</div>
+    <div class="reveal-card hidden" id="card" onclick="toggleCard()" tabindex="0" role="button" aria-label="اضغط لكشف الدور">
+      <div class="cover">
+        <div class="cover-text">?</div>
+        <div class="cover-hint mono">اضغط للكشف</div>
+      </div>
+      <div class="role-content">
+        <div class="player-name">${player.name}</div>
+        <div class="role-revealed" style="border-color:${info.color};color:${info.color}">${info.label}</div>
+        <div class="role-desc-reveal">${info.desc}</div>
+      </div>
+    </div>
+    <div class="controls" id="controls">
+      <button class="btn" id="nextBtn" onclick="nextPlayer()" style="display:none;">التالي →</button>
+      <button class="btn" onclick="goBack()">العودة للإعداد</button>
+    </div>
+    <div class="counter-text" id="counter">اللاعب ${toArabicNum(idx + 1)} من ${toArabicNum(allPlayers.length)}</div>
+  `;
+  
+  const card = document.getElementById('card');
+  card.focus();
+  card.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      toggleCard();
+    }
+  });
+}
+
+function toggleCard() {
+  const card = document.getElementById('card');
+  card.classList.toggle('hidden');
+  card.classList.toggle('revealed');
+  
+  if(card.classList.contains('revealed')) {
+    const nextBtn = document.getElementById('nextBtn');
+    nextBtn.style.display = 'block';
+    nextBtn.focus();
+  }
+}
+
+function nextPlayer() {
+  if(currentPlayerIndex + 1 < allPlayers.length) {
+    showCard(currentPlayerIndex + 1);
+  } else {
+    showCompletion();
+  }
+}
+
+function showCompletion() {
+  const cardArea = document.getElementById('cardArea');
+  cardArea.innerHTML = `
+    <div class="completion-screen">
+      <h2>✓ اكتمل التوزيع!</h2>
+      <p>كل لاعب الآن يعرف دوره بسرية كاملة.<br><strong>ابدأ الجلسة الآن!</strong></p>
+      <div class="controls">
+        <button class="btn primary" onclick="newRound()">جولة جديدة</button>
+        <button class="btn" onclick="goBack()">العودة للإعداد</button>
+      </div>
+    </div>
+  `;
+}
+
+function goBack() {
+  sessionStorage.removeItem('playersData');
+  window.location.href = 'almohtal_padg_2.html';
+}
+
+function newRound() {
+  sessionStorage.removeItem('playersData');
+  window.location.href = 'almohtal_padg_2.html';
+}
+
+// Initialize on load
+window.addEventListener('load', initCards);
+</script>
+
+</body>
+</html>
